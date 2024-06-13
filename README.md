@@ -14,7 +14,7 @@ This script is used to evaluate a pre-trained reinforcement learning model on a 
 #### Usage:
 
 ```bash
-python evaluation/main.py --env <environment_name> --model <model_name> [--episodes <number_of_episodes>]
+python3 evaluation/main.py --env <environment_name> --model <model_name> [--episodes <number_of_episodes>]
 ```
 
 #### Arguments:
@@ -26,7 +26,7 @@ python evaluation/main.py --env <environment_name> --model <model_name> [--episo
 #### Example:
 
 ```bash
-python evaluation/main.py --env Ur3eEnvRew0_01 --model my_sac_model --episodes 50
+python3 evaluation/main.py --env Ur3eEnvRew0_01 --model my_sac_model --episodes 50
 ```
 
 ### 2. Training Script (`training/main.py`)
@@ -36,7 +36,7 @@ This script is used to train a reinforcement learning model on a specified envir
 #### Usage:
 
 ```bash
-python training/main.py --env <environment_name> --model <model_name> --policy <policy_name> [--learning_rate <lr>] [--batch_size <batch_size>] [--training_steps <training_steps>]
+python3 training/main.py --env <environment_name> --model <model_name> --policy <policy_name> [--learning_rate <lr>] [--batch_size <batch_size>] [--training_steps <training_steps>]
 ```
 
 #### Arguments:
@@ -51,15 +51,14 @@ python training/main.py --env <environment_name> --model <model_name> --policy <
 #### Example:
 
 ```bash
-python training/main.py --env Ur3eEnvRew0_05 --model my_sac_model --policy sac --learning_rate 0.0005 --batch_size 128 --training_steps 20000
+python3 training/main.py --env Ur3eEnvRew0_05 --model my_sac_model --policy sac --learning_rate 0.0005 --batch_size 128 --training_steps 20000
 ```
 
 ---
 
 ### Notes:
 
-- Ensure that Python environment includes all necessary dependencies, including `stable_baselines3` and `torch`.
+- Ensure that Python environment includes all necessary dependencies, including `stable_baselines3`,  `torch` and `gymnasium`.
 - CUDA will be used if available; otherwise, the CPU will be used for computation.
-- Make sure to adjust paths (`../urdf/ur3e.urdf`, `../policies/`, `../logs/`) as per your project structure.
 
 This documentation provides clear instructions on how to execute both scripts with examples of typical usage scenarios. Adjust the examples and paths based on your specific project setup and requirements.
