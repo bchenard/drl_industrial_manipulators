@@ -23,7 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, required=True, help="Model path to save/load")
     args = parser.parse_args()
 
-    urdf_ur3e_path = "/home/bchenard/Documents/drl_env/stage/pybullet/ur3e/ur3e.urdf"
+    urdf_ur3e_path = "urdf/ur3e.urdf"
     ur3e_env = get_env(args.env, urdf_ur3e_path)
 
     # Check if CUDA is available
@@ -32,12 +32,12 @@ if __name__ == "__main__":
 
     if args.mode == "train":
         # Wrap the environment in a monitor
-        filename = "logs_training/sac_randomized_lr0_0003_reward1000"
+        filename = "../logs/training"
         monitored_env = Monitor(ur3e_env, filename=filename)
         
         # Load or create the model
         try:
-            model = SAC.load(args.model, device=device)
+            model = SAC.load("policies/" + args.model, device=device)
             model.set_env(monitored_env)
         except FileNotFoundError:
             print("Model not found, creating a new one")
@@ -48,12 +48,12 @@ if __name__ == "__main__":
         model.learn(nb_steps)
         
         # Save the model
-        print("Model successfully saved to:", args.model)
-        model.save(args.model)
+        print("Model successfully saved to:", "policies/" + args.model)
+        model.save("policies/" + args.model)
     
     elif args.mode == "test":
         # Load the model for testing
-        model = SAC.load("models/" + args.model, device=device)
+        model = SAC.load("policies/" +  args.model, device=device)
 
         # Testing loop
         n_episodes = 200

@@ -2,7 +2,10 @@ from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.monitor import Monitor
 import torch
 import argparse
-from time import sleep
+import sys
+
+# Ajouter le chemin du dossier parent
+sys.path.append('..')
 
 # Environments
 from envs.ur3e_env_reward0_01 import Ur3eEnvRew0_01
@@ -16,70 +19,51 @@ def get_env(env_name, urdf_ur3e_path):
     else:
         raise ValueError(f"Unknown environment: {env_name}")
 
+def get_policy(policy_name, env, learning_rate, batch_size, device):
+    if policy_name.lower() == "sac":
+        return SAC("MlpPolicy", env, verbose=0, seed=0, device=device, learning_rate=learning_rate, batch_size=batch_size)
+    elif policy_name.lower() == "ppo":
+        return PPO("MlpPolicy", env, verbose=0, seed=0, device=device, learning_rate=learning_rate, batch_size=batch_size)
+    else:
+        raise ValueError(f"Unknown policy: {policy_name}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", type=str, choices=["train", "test"], required=True, help="Mode to run: train or test")
     parser.add_argument("--env", type=str, required=True, help="Environment to use")
     parser.add_argument("--model", type=str, required=True, help="Model path to save/load")
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate for training")
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
+    parser.add_argument("--training_steps", type=int, default=10000, help="Number of training steps")
+    parser.add_argument("--policy", type=str, required=True, help="Policy to use (sac, ppo, ...)")
     args = parser.parse_args()
 
-    urdf_ur3e_path = "/home/bchenard/Documents/drl_env/stage/pybullet/ur3e/ur3e.urdf"
+    urdf_ur3e_path = "../urdf/ur3e.urdf"
     ur3e_env = get_env(args.env, urdf_ur3e_path)
 
     # Check if CUDA is available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    if args.mode == "train":
-        # Wrap the environment in a monitor
-        filename = "logs_training/sac_randomized_lr0_0003_reward1000"
-        monitored_env = Monitor(ur3e_env, filename=filename)
-        
-        # Load or create the model
-        try:
-            model = SAC.load(args.model, device=device)
-            model.set_env(monitored_env)
-        except FileNotFoundError:
-            print("Model not found, creating a new one")
-            model = SAC("MlpPolicy", monitored_env, verbose=0, seed=0, device=device, learning_rate=0.0003, batch_size=256)
-        
-        # Train the model
-        nb_steps = 200000
-        model.learn(nb_steps)
-        
-        # Save the model
-        print("Model successfully saved to:", args.model)
-        model.save(args.model)
+    # Wrap the environment in a monitor
+    filename = "../logs/training"
+    monitored_env = Monitor(ur3e_env, filename=filename)
     
-    elif args.mode == "test":
-        # Load the model for testing
-        model = SAC.load("models/" + args.model, device=device)
-
-        # Testing loop
-        n_episodes = 200
-        reward_threshold = 0
-        max_steps = 500
-
-        reward_above_threshold_count = 0
-        episode_less_than_max_steps_count = 0
-
-        for episode in range(n_episodes):
-            print(f"Episode {episode + 1}/{n_episodes}")
-            obs, _ = ur3e_env.reset()
-            episode_reward = 0
-            for step in range(max_steps):
-                action, _ = model.predict(obs)
-                obs, reward, done, _, info = ur3e_env.step(action)
-                episode_reward += reward
-                if done:
-                    if episode_reward > reward_threshold:
-                        reward_above_threshold_count += 1
-                    if step < max_steps - 1:
-                        episode_less_than_max_steps_count += 1
-                    break
-
-        print(f"Number of episodes with reward > {reward_threshold}: {reward_above_threshold_count}, frequency: {reward_above_threshold_count / n_episodes:.2f}")
-        print(f"Number of episodes with less than {max_steps} steps: {episode_less_than_max_steps_count}, frequency: {episode_less_than_max_steps_count / n_episodes:.2f}")
+    # Load or create the model
+    model_path = "../policies/" + args.model
+    try:
+        model = SAC.load(model_path, device=device)
+        model.set_env(monitored_env)
+    except FileNotFoundError:
+        print("Model not found, creating a new one")
+        model = get_policy(args.policy, monitored_env, args.learning_rate, args.batch_size, device)
+    
+    # Train the model
+    nb_steps = args.training_steps
+    model.learn(nb_steps)
+    
+    # Save the model
+    print("Model successfully saved to:", model_path)
+    model.save(model_path)
 
     # Close the environment
     ur3e_env.close()
