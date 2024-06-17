@@ -1,10 +1,12 @@
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.logger import configure
 import torch
 import argparse
 import sys
+import os
 
-# Ajouter le chemin du dossier parent
+# Add parent directory to the sys.path
 sys.path.append('..')
 
 # Environments
@@ -45,22 +47,28 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Wrap the environment in a monitor
-    filename = "../logs/training"
-    monitored_env = Monitor(ur3e_env, filename=filename)
-    
+    log_dir = "../logs"
+    os.makedirs(log_dir, exist_ok=True)
+    model_name = os.path.splitext(args.model)[0]  # Extract the model name without the extension
+    log_path = os.path.join(log_dir, model_name)
+    monitored_env = Monitor(ur3e_env, filename=os.path.join(log_path, 'monitor.csv'))
+
     # Load or create the model
-    model_path = "../policies/" + args.model
+    model_path = os.path.join("../policies", args.model)
     try:
         model = SAC.load(model_path, device=device)
         model.set_env(monitored_env)
     except FileNotFoundError:
         print("Model not found, creating a new one")
         model = get_policy(args.policy, monitored_env, args.learning_rate, args.batch_size, device)
-    
+
+    # Configure TensorBoard logging
+    model.set_logger(configure(log_path, ["tensorboard"]))
+
     # Train the model
     nb_steps = args.training_steps
     model.learn(nb_steps)
-    
+
     # Save the model
     print("Model successfully saved to:", model_path)
     model.save(model_path)
