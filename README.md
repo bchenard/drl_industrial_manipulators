@@ -1,5 +1,5 @@
 # drl_industrial_manipulators
-Exploring Deep Reinforcement Learning (DRL) methods for the programmation of industrial maniuplators
+Exploring Deep Reinforcement Learning (DRL) methods for the programmation of industrial manipulators
 
 To generate documentation for executing the provided scripts (`evaluation/main.py` and `training/main.py`), we can create a simple README file that outlines how to run each script along with the necessary arguments. Here's an example of what the documentation might look like:
 
