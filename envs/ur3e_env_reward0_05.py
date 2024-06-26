@@ -9,7 +9,7 @@ class Ur3eEnvRew0_05(gym.Env):
         super(Ur3eEnvRew0_05, self).__init__()
         self.urdf_file_path = urdf_file_path
         self.robot_type = robot_type
-        self.physics_client = p.connect(p.DIRECT)  # Use GUI mode
+        self.physics_client = p.connect(p.GUI)  # Use GUI mode
         p.setAdditionalSearchPath(pybullet_data.getDataPath())  # to get the plane.urdf
         self.init_state()
         self.target_position = targetPosition

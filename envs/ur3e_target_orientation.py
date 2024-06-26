@@ -69,9 +69,9 @@ class Ur3eTargetOrientation(gym.Env):
         relative_quaternion = p.getDifferenceQuaternion(current_orientation, target_orientation)
         
         # Sum of the absolute values of the quaternion components (excluding the norm)
-        difference_sum = np.sum(np.abs(relative_quaternion))
+        difference_norm = np.linalg.norm(relative_quaternion[1:])
         
-        return difference_sum
+        return difference_norm
 
     def get_reward(self, position_difference, current_orientation):
         position_error = np.linalg.norm(position_difference)
@@ -79,7 +79,7 @@ class Ur3eTargetOrientation(gym.Env):
         # Calculate orientation error as the sum of the quaternion components
         orientation_error = self.get_orientation_difference(current_orientation, self.target_orientation)
         
-        reward = - (position_error + orientation_error)  # Negative reward proportional to the error
+        reward = np.exp(-0.1*(position_error + orientation_error))
         if position_error < 0.05 and orientation_error < 0.1:
             reward += 1000  # Bonus for reaching close to the target
         return reward
