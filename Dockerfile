@@ -27,6 +27,3 @@ WORKDIR /home
 COPY . /home
 
 CMD ["/bin/bash", "/home/entrypoint.sh"]
-
-# Name the image
-
