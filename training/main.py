@@ -13,6 +13,7 @@ sys.path.append('..')
 from envs.ur3e_env_reward0_01 import Ur3eEnvRew0_01
 from envs.ur3e_env_reward0_05 import Ur3eEnvRew0_05
 from envs.ur3e_target_orientation import Ur3eTargetOrientation
+from envs.ur3e_curriculum import Ur3eCurriculum
 
 def get_env(env_name, urdf_ur3e_path):
     if env_name == "Ur3eEnvRew0_01":
@@ -21,6 +22,8 @@ def get_env(env_name, urdf_ur3e_path):
         return Ur3eEnvRew0_05(urdf_ur3e_path, "UR3e", [0, 0, 0])
     elif env_name == "Ur3eTargetOrientation":
         return Ur3eTargetOrientation(urdf_ur3e_path, "UR3e", [0.2, 0.3, 0.25], [0, 0, 0, 1])
+    elif env_name == "Ur3eCurriculum":
+        return Ur3eCurriculum(urdf_ur3e_path, "UR3e", [0.2, 0.3, 0.25], [0, 0, 0, 1])
     else:
         raise ValueError(f"Unknown environment: {env_name}")
 
