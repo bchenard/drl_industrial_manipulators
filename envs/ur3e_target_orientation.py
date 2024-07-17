@@ -14,7 +14,7 @@ class Ur3eTargetOrientation(gym.Env):
         self.evaluation_mode = evaluation_mode
 
         # Connect to PyBullet
-        self.physics_client = p.connect(p.GUI if use_gui else p.DIRECT)
+        self.physics_client = p.connect(p.GUI if use_gui else p.DIRECT, options="--opengl2")
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         self.init_state()
 

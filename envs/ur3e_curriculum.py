@@ -26,6 +26,7 @@ class Ur3eCurriculum(gym.Env):
         self.step_counter = 0
         self.curriculum_level = 0
         self.success_counter = 0
+        self.consecutive_success_counter = 0
         self.success_threshold = 10
 
         self.reward_thresholds_pos = [0.6, 0.5, 0.35, 0.25, 0.15, 0.1, 0.07, 0.05, 0.03, 0.02, 0.01, 0.008, 0.005, 0.003, 0.002]
@@ -54,9 +55,10 @@ class Ur3eCurriculum(gym.Env):
                                                baseOrientation=self.target_orientation)
 
     def update_curriculum(self):
-        if self.success_counter >= self.success_threshold and self.curriculum_level < len(self.reward_thresholds_pos) - 1:
+        if self.consecutive_success_counter >= 5 and self.curriculum_level < len(self.reward_thresholds_pos) - 1:
             self.curriculum_level += 1
             self.success_counter = 0
+            self.consecutive_success_counter = 0
             print(f"Leveling up! New curriculum level: {self.curriculum_level}")
             self.logger.record("curriculum/level", self.curriculum_level)
 
@@ -95,13 +97,13 @@ class Ur3eCurriculum(gym.Env):
         position_error = np.linalg.norm(position_difference)
         orientation_error = self.get_orientation_difference(current_orientation, self.target_orientation)
         reward = 0
-        threshold_pos = self.reward_thresholds_pos[self.curriculum_level]
-        threshold_orient = self.reward_thresholds_orient[self.curriculum_level]
-        # print(f"Position error: {position_error}, Orientation error: {orientation_error}")
         if (position_error + orientation_error) < self.reward_thresholds[self.curriculum_level]:
             reward = 1000 * (self.curriculum_level + 1)
+            self.consecutive_success_counter += 1
+            reward += 100 * self.consecutive_success_counter
             self.success_counter += 1
         else:
+            self.consecutive_success_counter = 0
             self.success_counter = max(0, self.success_counter - 1)
         return reward
 
@@ -125,9 +127,18 @@ class Ur3eCurriculum(gym.Env):
         reward = self.get_reward(position_difference, tip_orientation)
 
         done = False
+        if reward > 0:
+            done = True
+            self.update_curriculum()
+            print("Current level:", self.curriculum_level)
+            print("Consecutive success counter:", self.consecutive_success_counter)
+            observation = self.reset()[0]
+
         if self.step_counter >= 500:
             done = True
             self.update_curriculum()
+            print("Current level:", self.curriculum_level)
+            print("Consecutive success counter:", self.consecutive_success_counter)
 
         info = {}
         terminated = done

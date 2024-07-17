@@ -1,17 +1,44 @@
 FROM ubuntu:22.04
 
-
 LABEL author="Benoît Chénard"
 LABEL email="bchenard@bordeaux-inp.fr"
 LABEL version="1.0"
 LABEL description="DRL Industrial Manipulators Image"
 
-
-RUN apt-get update && apt-get install -y \
+# Install necessary packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
-    python-is-python3 
+    python-is-python3 \
+    x11vnc \
+    xvfb \
+    fluxbox \
+    xterm \
+    wget \
+    net-tools \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Set environment variables
+ENV DISPLAY=:1
+
+# Create the .vnc directory and password
+RUN mkdir -p ~/.vnc && \
+    x11vnc -storepasswd 1234 ~/.vnc/passwd
+
+# Create a startup script
+RUN echo '#!/bin/bash\n\
+          \n\
+          # Start Xvfb\n\
+          Xvfb :1 -screen 0 1024x768x16 &\n\
+          \n\
+          # Start fluxbox\n\
+          fluxbox &\n\
+          \n\
+          # Start x11vnc\n\
+          x11vnc -display :1 -forever -usepw -create\n' > /startup.sh \
+          && chmod +x /startup.sh
+
+# Install Python libraries
 RUN pip3 install --upgrade pip \
     && pip3 install numpy \
     && pip3 install matplotlib \
@@ -27,25 +54,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ENV USER=root
 
-# Install XFCE, VNC server, dbus-x11, and xfonts-base
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    xfce4 \
-    xfce4-goodies \
-    tightvncserver \
-    dbus-x11 \
-    xfonts-base \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Setup VNC server
-RUN mkdir /root/.vnc \
-    && echo "password" | vncpasswd -f > /root/.vnc/passwd \
-    && chmod 600 /root/.vnc/passwd
-
-# Create an .Xauthority file
-RUN touch /root/.Xauthority
-
-# Set display resolution (change as needed)
-ENV RESOLUTION=1920x1080
 
 # Expose VNC port
 EXPOSE 5901
